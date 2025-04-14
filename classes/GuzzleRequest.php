@@ -1,6 +1,7 @@
 <?php
 require 'vendor/autoload.php';
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class GuzzleRequest extends AbstractRequest
 {
@@ -12,7 +13,7 @@ class GuzzleRequest extends AbstractRequest
         }
 
         $client = new Client();
-        $options = array();
+        $options = [];
 
         if (!empty($this->headers)) {
             $options['headers'] = $this->headers;
@@ -26,10 +27,14 @@ class GuzzleRequest extends AbstractRequest
             }
         }
 
-        $res = $client->request($this->method, $this->url, $options);
-        $this->connected = true;
-        $this->status_code = $res->getStatusCode();
-        $this->response = $res->getBody()->getContents();
+        try {
+            $res = $client->request($this->method, $this->url, $options);
+            $this->connected = true;
+            $this->status_code = $res->getStatusCode();
+            $this->response = $res->getBody()->getContents();
+        } catch (RequestException $e) {
+            $this->connected = false;
+        }
     }
 
 }
